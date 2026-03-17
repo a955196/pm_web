@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react"; // 1. 引入 useEffect 用於監控變動
 import { Plus, Trash2, ChevronDown, Calendar, User, Building2, Printer } from "lucide-react";
 import { DatePicker } from "./DatePicker";
 
@@ -215,7 +215,6 @@ function PlatformSection({
 
   return (
     <div className="rounded-xl border border-[#e4e8f0] bg-white overflow-hidden shadow-sm">
-      {/* Header */}
       <div className="flex items-center gap-3 px-5 py-3.5 border-b border-[#e4e8f0]" style={{ backgroundColor: meta.bg }}>
         <span className="font-semibold text-[#1a2236]" style={{ fontSize: "1.02rem", letterSpacing: "0.04em" }}>
           {meta.label}
@@ -231,7 +230,6 @@ function PlatformSection({
       </div>
 
       <div className="p-5 space-y-5">
-        {/* In Progress */}
         <div>
           <div className="flex items-center justify-between mb-2.5">
             <div className="flex items-center gap-2">
@@ -252,7 +250,6 @@ function PlatformSection({
             </button>
           </div>
 
-          {/* Column headers */}
           <div className="grid grid-cols-2 gap-3 px-4 pb-1.5 border-b border-dashed border-[#e8ecf2]">
             <span style={{ fontSize: "0.8rem", color: "#94a3b8", letterSpacing: "0.06em" }}>專案 / 需求</span>
             <span style={{ fontSize: "0.8rem", color: "#94a3b8", letterSpacing: "0.06em" }}>進度說明</span>
@@ -274,10 +271,8 @@ function PlatformSection({
           ))}
         </div>
 
-        {/* Divider */}
         <div className="border-t border-dashed border-[#e4e8f0]" />
 
-        {/* Upcoming */}
         <div>
           <div className="flex items-center justify-between mb-2.5">
             <div className="flex items-center gap-2">
@@ -326,21 +321,57 @@ function PlatformSection({
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 export function DailyReport() {
-  const [reporter, setReporter] = useState("姓名");
-  const [department, setDepartment] = useState("部門");
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date(2026, 2, 18));
-
-  const [supervisorItems, setSupervisorItems] = useState<SupervisorItem[]>([
-    { id: uid(), index: 1, project: "", content: "", owner: "" },
-  ]);
-
-  const [platforms, setPlatforms] = useState<Record<Platform, PlatformData>>({
-    frontend: { inProgress: [], upcoming: [] },
-    middle: { inProgress: [], upcoming: [] },
-    backend: { inProgress: [], upcoming: [] },
+  // ── 修改：使用函數式初始化，從 LocalStorage 讀取資料 ──
+  
+  const [reporter, setReporter] = useState(() => {
+    return localStorage.getItem("dr_reporter") || "姓名";
+  });
+  
+  const [department, setDepartment] = useState(() => {
+    return localStorage.getItem("dr_dept") || "部門";
   });
 
-  // ── Supervisor handlers ──
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    const saved = localStorage.getItem("dr_date");
+    return saved ? new Date(saved) : new Date(2026, 2, 18);
+  });
+
+  const [supervisorItems, setSupervisorItems] = useState<SupervisorItem[]>(() => {
+    const saved = localStorage.getItem("dr_supervisor");
+    return saved ? JSON.parse(saved) : [
+      { id: uid(), index: 1, project: "", content: "", owner: "" },
+    ];
+  });
+
+  const [platforms, setPlatforms] = useState<Record<Platform, PlatformData>>(() => {
+    const saved = localStorage.getItem("dr_platforms");
+    return saved ? JSON.parse(saved) : {
+      frontend: { inProgress: [], upcoming: [] },
+      middle: { inProgress: [], upcoming: [] },
+      backend: { inProgress: [], upcoming: [] },
+    };
+  });
+
+  // ── 修改：加入 useEffect 自動存檔 ──
+
+  // 存檔基本資訊
+  useEffect(() => {
+    localStorage.setItem("dr_reporter", reporter);
+    localStorage.setItem("dr_dept", department);
+    localStorage.setItem("dr_date", selectedDate.toISOString());
+  }, [reporter, department, selectedDate]);
+
+  // 存檔主管呈報事項
+  useEffect(() => {
+    localStorage.setItem("dr_supervisor", JSON.stringify(supervisorItems));
+  }, [supervisorItems]);
+
+  // 存檔工作項目
+  useEffect(() => {
+    localStorage.setItem("dr_platforms", JSON.stringify(platforms));
+  }, [platforms]);
+
+  // ── Supervisor handlers (保持不變) ──
   const addSupervisorItem = () => {
     setSupervisorItems((prev) => [
       ...prev,
@@ -358,7 +389,7 @@ export function DailyReport() {
     );
   };
 
-  // ── Platform handlers ──
+  // ── Platform handlers (保持不變) ──
   const addWorkItem = (platform: Platform, status: "in-progress" | "upcoming") => {
     const newItem: WorkItem = { id: uid(), project: "", progress: "", status };
     setPlatforms((prev) => ({
@@ -442,7 +473,6 @@ export function DailyReport() {
 
         {/* ── Section 1: Supervisor Report ── */}
         <div className="rounded-xl border border-[#e4e8f0] bg-white overflow-hidden shadow-sm">
-          {/* Section title */}
           <div className="flex items-center justify-between px-5 py-3.5 bg-[#0f1f3d] text-white">
             <div className="flex items-center gap-2.5">
               <span
@@ -458,7 +488,6 @@ export function DailyReport() {
             </span>
           </div>
 
-          {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
@@ -492,7 +521,6 @@ export function DailyReport() {
             </table>
           </div>
 
-          {/* Add row */}
           <div className="px-5 py-3 border-t border-dashed border-[#e4e8f0]">
             <button
               onClick={addSupervisorItem}
@@ -507,7 +535,6 @@ export function DailyReport() {
 
         {/* ── Section 2: Platform Work Report ── */}
         <div className="space-y-4">
-          {/* Section title */}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2.5">
               <span
@@ -538,7 +565,6 @@ export function DailyReport() {
             </div>
           </div>
 
-          {/* Column header labels */}
           <div className="grid grid-cols-3 gap-4">
             {(["frontend", "middle", "backend"] as Platform[]).map((platform) => (
               <PlatformSection
@@ -563,7 +589,6 @@ export function DailyReport() {
         </div>
       </div>
 
-      {/* Print styles */}
       <style>{`
         @media print {
           body { background: white !important; }
