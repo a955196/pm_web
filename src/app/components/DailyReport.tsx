@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Trash2, Calendar, User, Building2, Printer } from "lucide-react";
 import { DatePicker } from "./DatePicker";
-import { supabase } from "../../supabaseClient"; // 確保路徑指向你的 supabaseClient.ts
+import { supabase } from "../../../supabaseClient"; // 確保路徑指向你的 supabaseClient.ts
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
